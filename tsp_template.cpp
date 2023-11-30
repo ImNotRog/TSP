@@ -4,8 +4,8 @@ using namespace std;
 typedef long double ld;
 typedef pair<ld, ld> pld;
 
-vector<pld> COORDINATE_LIST = {{0,0}};
-
+vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
+const ld INF = 1e18;
 struct Graph
 {
     int n;
@@ -64,18 +64,54 @@ struct Graph
 struct Tour : Graph
 {
     vector<bool> visited;
+    vector<int> path;
+    ld path_length;
     Tour (vector<pld> cities) : Graph(cities)
     {
-        visited = vector<bool> (size());
+        path_length = INF;
+        visited = vector<bool> (n);
     }
     
-};
+    bool operator<(const Tour &other) { return path_length < other.path_length; }
+    
+    bool check_vis (int x)
+    {
+        return visited[x];
+    }
+    
+    void visit (int x)
+    {
+        assert(!visited[x]);
+        visited[x] = 1;
+    }
+    
+    void calc_path_length()
+    {
+        path_length = 0;
+        for (int i = 1; i < n; i++)
+        {
+            path_length = path_length + adj_matrix[path[i]][path[i-1]];
+        }
+        path_length = path_length + adj_matrix[path[n-1]][path[0]];
+    }
+    
+    void print_path()
+    {
+        calc_path_length();
+        cout << "length: " << path_length << "\n";
+        cout << "path: ";
+        for (auto vertex : path)
+        {
+            cout << vertex << " ";
+        }
+        cout << "\n";
+    }
 
+};
 
 int main()
 {
-    
-    Tour g (COORDINATE_LIST);
+    Tour g(COORDINATE_LIST);
     cout << g.size() << "\n";
  return 0;
 }
