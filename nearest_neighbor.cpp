@@ -6,37 +6,37 @@ typedef pair<ld, ld> pld;
 
 vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
 const ld INF = 1e18;
+
+ld sq (ld x)
+{
+    return x * x;
+}
+
+ld eucl_dist (pld x, pld y)
+{
+    return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
+}
+    
 struct Graph
 {
     int n;
     vector<pld> city_coords;
     vector<vector<ld>> adj_matrix;
-    
-    Graph (vector<pld> cities)
+    function<ld(pld,pld)> dist;
+    Graph (vector<pld> cities, function<ld(pld, pld)> temp_dist)
     {
         n = cities.size();
         city_coords = cities;
+        dist = temp_dist;
         adj_matrix = vector<vector<ld>> (n, vector<ld> (n));
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
             {
-                adj_matrix[i][j] = eucl_dist(city_coords[i], city_coords[j]);
+                adj_matrix[i][j] = dist(city_coords[i], city_coords[j]);
             }
         }
     }
-    
-    ld sq (ld x)
-    {
-        return x * x;
-    }
-    
-    ld eucl_dist (pld x, pld y)
-    {
-        return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
-    }
-    
-    
     
     int size()
     {
@@ -66,7 +66,7 @@ struct Tour : Graph
     vector<bool> visited;
     vector<int> path;
     ld path_length;
-    Tour (vector<pld> cities) : Graph(cities)
+    Tour (vector<pld> cities, function<ld(pld, pld)> temp_dist) : Graph(cities, temp_dist)
     {
         path_length = INF;
         visited = vector<bool> (n);
@@ -128,7 +128,7 @@ struct NearestNeighbor : Tour
     }
     
     
-    NearestNeighbor (vector<pld> cities, int start_vertex) : Tour(cities) 
+    NearestNeighbor (vector<pld> cities, function<ld(pld, pld)> temp_dist, int start_vertex) : Tour(cities, temp_dist) 
     {
         int current_vertex = start_vertex;
         while (current_vertex != -1)
@@ -145,7 +145,7 @@ int main()
     vector<Tour> tours;
     for (int i = 0; i < COORDINATE_LIST.size(); i++)
     {
-        tours.push_back(NearestNeighbor(COORDINATE_LIST, i));
+        tours.push_back(NearestNeighbor(COORDINATE_LIST, eucl_dist, i));
     }
     sort(tours.begin(),tours.end());
     tours[0].print_path();

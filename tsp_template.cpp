@@ -6,37 +6,37 @@ typedef pair<ld, ld> pld;
 
 vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
 const ld INF = 1e18;
+
+ld sq (ld x)
+{
+    return x * x;
+}
+
+ld eucl_dist (pld x, pld y)
+{
+    return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
+}
+    
 struct Graph
 {
     int n;
     vector<pld> city_coords;
     vector<vector<ld>> adj_matrix;
-    
-    Graph (vector<pld> cities)
+    function<ld(pld,pld)> dist;
+    Graph (vector<pld> cities, function<ld(pld, pld)> temp_dist)
     {
         n = cities.size();
         city_coords = cities;
+        dist = temp_dist;
         adj_matrix = vector<vector<ld>> (n, vector<ld> (n));
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
             {
-                adj_matrix[i][j] = eucl_dist(city_coords[i], city_coords[j]);
+                adj_matrix[i][j] = dist(city_coords[i], city_coords[j]);
             }
         }
     }
-    
-    ld sq (ld x)
-    {
-        return x * x;
-    }
-    
-    ld eucl_dist (pld x, pld y)
-    {
-        return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
-    }
-    
-    
     
     int size()
     {
@@ -66,7 +66,7 @@ struct Tour : Graph
     vector<bool> visited;
     vector<int> path;
     ld path_length;
-    Tour (vector<pld> cities) : Graph(cities)
+    Tour (vector<pld> cities, function<ld(pld, pld)> temp_dist) : Graph(cities, temp_dist)
     {
         path_length = INF;
         visited = vector<bool> (n);
@@ -111,7 +111,7 @@ struct Tour : Graph
 
 int main()
 {
-    Tour g(COORDINATE_LIST);
+    Tour g(COORDINATE_LIST, eucl_dist);
     cout << g.size() << "\n";
  return 0;
 }
