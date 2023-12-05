@@ -5,7 +5,22 @@ typedef long double ld;
 typedef pair<ld, ld> pld;
 
 vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
+vector<string> CITY_ORDER;
 const ld INF = 1e18;
+
+
+void init()
+{
+    ifstream fin("city_list.txt");
+    COORDINATE_LIST.clear();
+    string city, state;
+    ld x, y;
+    while (fin >> city >> state >> x >> y)
+    {
+        COORDINATE_LIST.push_back({x,y});
+        CITY_ORDER.push_back(city);
+    }
+}
 
 ld sq (ld x)
 {
@@ -111,6 +126,7 @@ struct Tour : Graph
 
 int main()
 {
+    init();
     Tour g(COORDINATE_LIST, eucl_dist);
     cout << g.size() << "\n";
  return 0;
