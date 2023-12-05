@@ -8,6 +8,7 @@ vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
 vector<string> CITY_ORDER;
 const ld INF = 1e18;
 
+
 void init()
 {
     ifstream fin("city_list.txt");
@@ -123,75 +124,109 @@ struct Tour : Graph
 
 };
 
-struct ExactSolution : Tour
+struct Edge
 {
-    vector<vector<ld>> dist;
-    vector<vector<int>> prev;
-    int final_vertex;
+    int st;
+    int en;
+    ld weight;
+    Edge(int tmp_st, int tmp_en, ld tmp_weight)
+    {
+        st = tmp_st;
+        en = tmp_en;
+        weight = tmp_weight;
+    }
+};
+struct DSU {
+    vector<int> e;
+    DSU (){}
+    DSU (int N) { e = vector<int>(N, -1) ;}
     
+    int get(int x) { return e[x] < 0 ? x : e[x] = get(e[x]); }
+    
+    bool same_set(int a, int b) { return get(a) == get(b); }
+    int size(int x) { return -e[get(x)]; }
+    
+    bool unite (int x, int y){
+    x = get(x), y = get(y);
+        if (x == y) return false;
+        if (e[x] > e[y]) swap(x,y);
+        e[x] += e[y]; e[y] = x;
+        return true;
+    }
+    
+};
+
+struct TwoApprox : Tour
+{
+    DSU dsu;
+    vector<vector<int>> adj_list;
+    vector<Edge> e;
+    vector<int> pv;
+    int prev_val;
+    void dfs (int u, int p)
+    {
+        pv[u] = prev_val;
+        prev_val = u;
+        for (auto x : adj_list[u])
+        {
+            if (x != p)
+            {
+                dfs(x,u);
+            }
+        }
+    }
     
     void reconstruct_path()
     {
-        int current_vertex = final_vertex;
-        int current_mask = (1 << n) - 1;
-
-        while (current_mask > 0)
+        int current_vertex = prev_val;
+        
+        while (current_vertex >= 0)
         {
             path.push_back(current_vertex);
-            int temp_vertex = current_vertex;
-            current_vertex = prev[current_mask][current_vertex];
-            current_mask ^= (1 << temp_vertex);
-            
+            current_vertex = pv[current_vertex];
         }
-        path.push_back(final_vertex);
+        path.push_back(prev_val);
     }
-    ExactSolution (vector<pld> cities, function<ld(pld, pld)> temp_dist) : Tour(cities, temp_dist) 
+    
+    TwoApprox (vector<pld> cities, function<ld(pld, pld)> temp_dist) : Tour(cities, temp_dist)
     {
-        dist = vector<vector<ld>> ((1 << n), vector<ld> (n, INF));
-        prev = vector<vector<int>> ((1 << n), vector<int> (n));
-        dist[1][0] = 0;
-        for (int mask = 0; mask < (1 << n); mask++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                if (mask & (1 << j))
-                {
-                    for (int k = 0; k < n; k++)
-                    {
-                        if (j != k && mask & (1 << k))
-                        {
-                            ld new_dist = dist[mask^(1 << k)][j] + adj_matrix[j][k];
-                            if (new_dist < dist[mask][k])
-                            {
-                                dist[mask][k] = new_dist;
-                                prev[mask][k] = j;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        ld min_dist  = INF;
-        final_vertex = -1;
+        dsu = DSU(n);
+        pv = vector<int> (n);
+        adj_list = vector<vector<int>> (n);
         for (int i = 0; i < n; i++)
         {
-            if (dist[(1 << n) - 1][i] + adj_matrix[i][0] < min_dist)
+            for (int j = i + 1; j < n; j++)
             {
-                min_dist = dist[(1 << n) - 1][i] + adj_matrix[i][0];
-                final_vertex = i;
+                e.push_back(Edge(i, j, adj_matrix[i][j]));
             }
         }
-        path_length = min_dist;
+        
+        sort(e.begin(),e.end(), [&](Edge &x, Edge &y)
+        {
+            return x.weight < y.weight;
+        });
+        
+        for (auto [x,y,w] : e)
+        {
+            if (dsu.unite(x,y))
+            {
+                adj_list[x].push_back(y);
+                adj_list[y].push_back(x);
+            }
+        }
+        
+        prev_val = -1;
+        dfs(0, -1);
         reconstruct_path();
     }
+    
+    
 };
-
-
 int main()
 {
     init();
-    ExactSolution tour = ExactSolution(COORDINATE_LIST, eucl_dist);
-    tour.print_path();
+    TwoApprox g(COORDINATE_LIST, eucl_dist);
+    g.print_path();
  return 0;
 }
 
