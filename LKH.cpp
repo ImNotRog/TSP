@@ -10,9 +10,7 @@ typedef long double ld;
 typedef pair<ld, ld> pld;
 typedef pair<int,int> pii;
 
-vector<pld> COORDINATE_LIST = {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {20, 0}, {10, 10}, {10, 5}, {20, 1}, {21, 1}};
-// {{0, 0}, {1, 3}, {10, 2}, {10, 1}, {20, 0}, { 20, 1 }};
-// {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {20, 0}, {10, 10}, {10, 5}, {20, 1}, {21, 1}};
+vector<pld> COORDINATE_LIST = {{6.59, 2.13}, {35.45, 46.55}, {5.13, 2.43}, {26.41, 18.36}, {0.06, 50.26}, {37.62, 0.17}, {0.03, 77.7}, {81.41, 73.5}, {3.85, 91.05}, {33.74, 60.32}, {0.78, 91.1}, {3.93, 0.63}, {30.66, 0.01}, {0.18, 0.27}, {39.55, 56.3}, {23.41, 40.06}, {7.66, 73.71}, {53.35, 27.24}, {3.83, 74.18}, {84.8, 2.4}, {1.21, 1.29}, {0.92, 74.36}, {46.1, 14.34}, {30.5, 1.13}, {5.78, 12.86}, {15.41, 4.9}, {33.41, 0.06}, {3.14, 0.97}, {38.17, 50.22}, {5.02, 49.5}, {87.43, 76.75}, {33.68, 3.44}, {3.59, 35.9}, {79.15, 6.44}, {6.29, 11.58}, {8.86, 0.12}, {82.64, 25.43}, {0.04, 37.08}, {25.43, 66.85}, {23.82, 0}, {1.92, 4.67}, {22.23, 60.22}, {24.91, 48.24}, {72.38, 15.79}, {14.98, 8.36}, {1.5, 48.84}, {7.94, 75.17}, {4.44, 0.33}, {24.4, 60.73}, {18.21, 4.09}, {4.01, 28.5}, {35.67, 0.17}, {76.35, 0.17}, {19.31, 13.07}, {8.3, 0.4}, {51.6, 0.04}, {4.52, 5.99}, {0, 7.91}, {2.09, 78.53}, {0.02, 12.3}, {20.16, 18.87}, {27.75, 30.9}, {3.42, 1.6}, {61.08, 78.66}, {21.24, 85.63}, {67.53, 80.38}, {20.2, 13.74}, {6.28, 0.01}, {45.26, 5.06}, {61.15, 84.09}, {90.89, 12.23}, {0, 0.87}, {95.64, 0.58}, {4.33, 36.61}, {97.73, 0.2}, {79.73, 4.61}, {81.85, 0.02}, {80.19, 48.57}, {90.04, 5.35}, {0.88, 10.8}, {40.73, 0.87}, {21.2, 0.1}, {0.13, 65.88}, {46.15, 38.63}, {29.95, 72.5}, {1.43, 65.64}, {31.12, 0}, {12.28, 6.28}, {2, 77.05}, {0.4, 0.03}, {4.71, 2.24}, {16.03, 65.01}, {61.51, 72.02}, {70.2, 7.06}, {2.35, 74.49}, {0.02, 37.5}, {0.4, 0.02}, {24.46, 2.75}, {12.42, 5.77}, {0.22, 0.8}, {400, 50}};
 
 const ld INF = 1e18;
 
@@ -142,15 +140,20 @@ struct LKH : Tour {
         for(int i = 0; i < n; i++) tour[i] = i; // init default path
         // cout << change_is_hamiltonian() << endl;
 
+        int iterations = 0;
         while(true) {
             bool found = find_positive_change();
 
             if(!found) break;
 
             update_tour_with_change();
-            print_tour();
+            // print_tour();
+            // print_explicit_tour();
+            iterations ++;
+            cout << "ITERATION: " << iterations << endl;
         }
 
+        print_tour();
         print_explicit_tour();
     }
 
@@ -188,8 +191,11 @@ struct LKH : Tour {
         for (int i = 0; i < n; i++)
             LKH_stack.push(LKH_step(i, 0, 0));
 
+        int num_steps = 0;
+
         while (!LKH_stack.empty())
         {
+            num_steps ++;
 
             LKH_step prev = LKH_stack.top();
 
@@ -260,6 +266,9 @@ struct LKH : Tour {
                 if( !are_tour_adjacent(prev.node, change[0]) ) {
                     if(prev.gain - adj_matrix[prev.node][change[0]] > 0) {
                         if(change_is_hamiltonian()) {
+                            
+                            cout << num_steps << endl;
+
                             return true;
                         }
                     }
@@ -409,14 +418,24 @@ struct LKH : Tour {
             change_nodes.push_back( tour_inv[change[i]] );
         }
 
-        vector<bool> nodes_visited = vector<bool>(n);
+        // vector<bool> nodes_visited = vector<bool>(n);
+        vector<bool> change_nodes_visited = vector<bool>(m);
 
-        int current_node = change_nodes[0];
+        int current_node = change_nodes[0]; // given by index in tour
 
         while(true) {
-
-            if(nodes_visited[current_node]) break;
-            nodes_visited[current_node] = true;
+            
+            // visit node
+            bool repeated = false;
+            for(int i = 0 ; i < m; i++) {
+                if( current_node == ( change_nodes[i] + 3 * n ) % n ) {
+                    if ( change_nodes_visited[i] ) {
+                        repeated = true;
+                    }
+                    change_nodes_visited[i] = true;
+                }
+            }
+            if(repeated) break;
 
             int direction = 1;
             // one way is blocked off
@@ -465,8 +484,17 @@ struct LKH : Tour {
 
             // cout << "B: " << current_node << endl;
 
-            if (nodes_visited[current_node]) break;
-            nodes_visited[current_node] = true;
+            // visit node
+            repeated = false;
+            for(int i = 0 ; i < m; i++) {
+                if( current_node == ( change_nodes[i] + 3 * n ) % n ) {
+                    if ( change_nodes_visited[i] ) {
+                        repeated = true;
+                    }
+                    change_nodes_visited[i] = true;
+                }
+            }
+            if(repeated) break;
 
             // traverse across odd edge
             for(int i = 1; i < m; i += 2) {
@@ -482,7 +510,7 @@ struct LKH : Tour {
         }
 
         for(int i = 0; i < m; i++) {
-            if(!nodes_visited[(change_nodes[i] + 3 * n) % n]) {
+            if(!change_nodes_visited[i]) {
                 return false;
             }
         }
