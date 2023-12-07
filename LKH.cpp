@@ -137,19 +137,41 @@ struct LKH : Tour {
     LKH(vector<pld> cities, function<ld(pld, pld)> temp_dist) : Tour(cities, temp_dist) {
         // constructor code
         for(int i = 0; i < n; i++) tour[i] = i; // init default path
-        update_tour_inv();
 
         // change = { 0, 6, 3, 4 };
         // cout << change_is_hamiltonian() << endl;
 
-        cout << find_positive_change() << endl;
+        while(true) {
+            bool found = find_positive_change();
 
-        for(int i : change) {
-            cout << i << endl;
+            if(!found) break;
+
+            update_tour_with_change();
+            print_tour();
         }
     }
 
+    ld tour_length () {
+        ld len = 0;
+        for(int i = 0; i < n; i++) {
+            len += adj_matrix[tour[i]][tour[(i+1)%n]];
+        }
+        return len;
+    }
+
+    void print_tour () {
+        cout << "length: " << tour_length() << endl;
+        cout << "path: ";
+        for(int node : tour) {
+            cout << node << " ";
+        }
+        cout << endl;
+    }
+
     bool find_positive_change () {
+
+        update_tour_inv();
+        change = {};
 
         stack<LKH_step> LKH_stack;
 
@@ -268,20 +290,86 @@ struct LKH : Tour {
         return false;
     }
 
-    bool are_tour_adjacent(int node1, int node2) {
-        int index1 = tour_inv[node1]; int index2 = tour_inv[node2];
-        if(abs( index1 - index2 ) <= 1 || abs(index1 - index2) == n-1) return true;
-        return false;
-    }
-
     void update_tour_inv() {
         for(int i = 0; i < n; i++) { 
             tour_inv[tour[i]] = i;
         }
     }
 
+    // the next 3 assume tour_inv is updated
+
+    bool are_tour_adjacent(int node1, int node2)
+    {
+        int index1 = tour_inv[node1];
+        int index2 = tour_inv[node2];
+        if (abs(index1 - index2) <= 1 || abs(index1 - index2) == n - 1)
+            return true;
+        return false;
+    }
+
     void update_tour_with_change () {
-        // annoying ass implementatoin
+        // annoying ass implementation
+
+        vector<int> new_tour = vector<int>(n);
+
+
+        int m = change.size();
+
+        vector<pii> links;        // given by index in tour
+        vector<int> change_nodes; // given by index in tour
+        for (int i = 0; i < m; i++)
+        {
+            links.push_back({tour_inv[change[i]], tour_inv[change[(i + 1) % m]]}); // even = in tour, odd = out
+            change_nodes.push_back(tour_inv[change[i]]);
+        }
+
+        int current_node = 0;
+        int direction = 1;
+
+        for(int t = 0; t < n; t++)
+        {
+            new_tour[t] = tour[current_node];
+
+            bool jumped = false;
+            for (int i = 1; i < m; i += 2) {
+                if (links[i].first == current_node)
+                {
+                    current_node = links[i].second;
+                    jumped = true;
+                    break;
+                }
+                if (links[i].second == current_node)
+                {
+                    jumped = true;
+                    current_node = links[i].first;
+                    break;
+                }
+            }
+
+            if(jumped) {
+                // check direction
+
+                direction = 1;
+
+                // one way is blocked off
+                // traverse along graph
+                for (int i = 0; i < m; i++)
+                {
+                    if (links[i] == make_pair(current_node, (current_node + 1) % n) || links[i] == make_pair((current_node + 1) % n, current_node))
+                    {
+                        direction = -1; // then we're going backwards
+                    }
+                }
+
+                t++;
+                new_tour[t] = tour[current_node];
+            }
+
+            // traverse tour
+            current_node += direction;
+        }
+
+        tour = new_tour;
     }
 
     bool change_is_hamiltonian() {
