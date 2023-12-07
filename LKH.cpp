@@ -10,7 +10,10 @@ typedef long double ld;
 typedef pair<ld, ld> pld;
 typedef pair<int,int> pii;
 
-vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}, {2,1}, {3,1}, {5,1}};
+vector<pld> COORDINATE_LIST = {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {20, 0}, {10, 10}, {10, 5}, {20, 1}, {21, 1}};
+// {{0, 0}, {1, 3}, {10, 2}, {10, 1}, {20, 0}, { 20, 1 }};
+// {{0, 0}, {0, 1}, {0, 2}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {20, 0}, {10, 10}, {10, 5}, {20, 1}, {21, 1}};
+
 const ld INF = 1e18;
 
 const int BRANCH_BOTH_BELOW = 2;
@@ -137,8 +140,6 @@ struct LKH : Tour {
     LKH(vector<pld> cities, function<ld(pld, pld)> temp_dist) : Tour(cities, temp_dist) {
         // constructor code
         for(int i = 0; i < n; i++) tour[i] = i; // init default path
-
-        // change = { 0, 6, 3, 4 };
         // cout << change_is_hamiltonian() << endl;
 
         while(true) {
@@ -149,12 +150,14 @@ struct LKH : Tour {
             update_tour_with_change();
             print_tour();
         }
+
+        print_explicit_tour();
     }
 
     ld tour_length () {
         ld len = 0;
         for(int i = 0; i < n; i++) {
-            len += adj_matrix[tour[i]][tour[(i+1)%n]];
+            len += adj_matrix[tour[i]][tour[ (i+1) % n]];
         }
         return len;
     }
@@ -168,10 +171,17 @@ struct LKH : Tour {
         cout << endl;
     }
 
+    void print_explicit_tour () {
+        for (int node : tour) {
+            cout << "(" << city_coords[node].first << "," << city_coords[node].second << "), ";
+        }
+        cout << "(" << city_coords[0].first << "," << city_coords[0].second << ")" << endl;
+    }
+
     bool find_positive_change () {
 
         update_tour_inv();
-        change = {};
+        change.clear();
 
         stack<LKH_step> LKH_stack;
 
@@ -180,7 +190,9 @@ struct LKH : Tour {
 
         while (!LKH_stack.empty())
         {
+
             LKH_step prev = LKH_stack.top();
+
             LKH_stack.pop();
 
             if (change.size() > prev.index)
@@ -193,6 +205,10 @@ struct LKH : Tour {
             {
                 change.push_back(prev.node);
             }
+            // for( int node : change ) {
+            //     cout << node << " ";
+            // }
+            // cout << endl;
 
             // two options
             vector<int> adjacencies = {tour[(tour_inv[prev.node] + 1) % n], tour[(tour_inv[prev.node] + n - 1) % n]};
@@ -219,14 +235,19 @@ struct LKH : Tour {
                         }
                         else if (!are_tour_adjacent(node, change[0]))
                         {
+
                             // we can try closing the loop
                             change.push_back(node);
+
                             if (change_is_hamiltonian())
                             {
                                 // if we can close it, then sure, add it
                                 LKH_stack.push(LKH_step(node, prev.index + 1, prev.gain + adj_matrix[prev.node][node]));
                             }
+
                             change.pop_back();
+
+
                         }
                     }
                 }
@@ -376,6 +397,8 @@ struct LKH : Tour {
         // check if tour XOR change is hamiltonian
         // O(m^2)
 
+        // cout << "RUNNING!!" << endl;
+
         int m = change.size();
 
         vector<pii> links; // given by index in tour
@@ -405,18 +428,14 @@ struct LKH : Tour {
                 }
             }
 
-            // cout << "DIR: " << direction << endl;
-
             if(direction == 1) {
                 for (int i = 0; i < m; i++)
                 {
                     while (change_nodes[i] > current_node) change_nodes[i] -= n;
                     while (change_nodes[i] < current_node) change_nodes[i] += n; // get every change node above current node
-
-                    // cout << change_nodes[i] << endl;
                 }
 
-                int min_node = 10 * m;
+                int min_node = 10 * n;
 
                 for (int i = 0; i < m; i++) {
                     if(change_nodes[i] < min_node && change_nodes[i] > current_node) {
@@ -424,7 +443,7 @@ struct LKH : Tour {
                     }
                 }
 
-                current_node = min_node;
+                current_node = min_node % n;
             }
 
             if(direction == -1) {
@@ -434,14 +453,14 @@ struct LKH : Tour {
                     while (change_nodes[i] > current_node) change_nodes[i] -= n; // get every change node below current node
                 }
 
-                int max_node = -(10 * m);
+                int max_node = -(10 * n);
                 for (int i = 0; i < m; i++)
                 {
                     if (change_nodes[i] > max_node && change_nodes[i] < current_node)
                         max_node = change_nodes[i];
                 }
 
-                current_node = max_node;
+                current_node = (max_node + 2 * n ) % n;
             }
 
             // cout << "B: " << current_node << endl;
@@ -463,8 +482,7 @@ struct LKH : Tour {
         }
 
         for(int i = 0; i < m; i++) {
-            if(!nodes_visited[change_nodes[i]]) {
-                // cout << i << " " << change[i] << endl;
+            if(!nodes_visited[(change_nodes[i] + 3 * n) % n]) {
                 return false;
             }
         }
