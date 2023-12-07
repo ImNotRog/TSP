@@ -1,4 +1,7 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 typedef long double ld;
@@ -16,7 +19,7 @@ ld eucl_dist (pld x, pld y)
 {
     return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
 }
-    
+
 struct Graph
 {
     int n;
