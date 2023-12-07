@@ -13,7 +13,8 @@ typedef pair<int,int> pii;
 vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}, {2,1}, {3,1}, {5,1}};
 const ld INF = 1e18;
 
-const int BRANCH_ALL_BELOW = 2;
+const int BRANCH_BOTH_BELOW = 2;
+const int BRANCH_ONE_ABOVE = 5;
 
 ld sq(ld x)
 {
@@ -141,25 +142,136 @@ struct LKH : Tour {
         // change = { 0, 6, 3, 4 };
         // cout << change_is_hamiltonian() << endl;
 
+        cout << find_positive_change() << endl;
+
+        for(int i : change) {
+            cout << i << endl;
+        }
+    }
+
+    bool find_positive_change () {
+
         stack<LKH_step> LKH_stack;
 
-        for(int i = 0; i < n; i++) LKH_stack.push( LKH_step( i, 0, 0 ));
+        for (int i = 0; i < n; i++)
+            LKH_stack.push(LKH_step(i, 0, 0));
 
-        while( !LKH_stack.empty() ) {
+        while (!LKH_stack.empty())
+        {
             LKH_step prev = LKH_stack.top();
             LKH_stack.pop();
-            
-            change[prev.index] = prev.node;
-            while( change.size() > prev.index + 1 ) change.pop_back(); // reset state
 
-            if(prev.index % 2 == 0) {
-                // inf even, we wish to find a link in the current tour
+            if (change.size() > prev.index)
+            {
+                change[prev.index] = prev.node;
+                while (change.size() > prev.index + 1)
+                    change.pop_back(); // reset state
+            }
+            else
+            {
+                change.push_back(prev.node);
+            }
 
-                if (prev.index <= BRANCH_ALL_BELOW) {
-                    
+            // two options
+            vector<int> adjacencies = {tour[(tour_inv[prev.node] + 1) % n], tour[(tour_inv[prev.node] + n - 1) % n]};
+
+            if (prev.index % 2 == 0)
+            {
+                // index even, we wish to find a link in the current tour
+
+                for (int node : adjacencies)
+                {
+
+                    bool already_added = false;
+                    for (int i = 0; i < change.size(); i++)
+                    {
+                        if (change[i] == node)
+                            already_added = true;
+                    }
+
+                    if (!already_added)
+                    {
+                        if (prev.index <= BRANCH_BOTH_BELOW)
+                        { // or closed
+                            LKH_stack.push(LKH_step(node, prev.index + 1, prev.gain + adj_matrix[prev.node][node]));
+                        }
+                        else if (!are_tour_adjacent(node, change[0]))
+                        {
+                            // we can try closing the loop
+                            change.push_back(node);
+                            if (change_is_hamiltonian())
+                            {
+                                // if we can close it, then sure, add it
+                                LKH_stack.push(LKH_step(node, prev.index + 1, prev.gain + adj_matrix[prev.node][node]));
+                            }
+                            change.pop_back();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // index odd, we wish to find a link not in the current tour
+
+                // first: check if we can immediately close the tour, then we win
+                if( !are_tour_adjacent(prev.node, change[0]) ) {
+                    if(prev.gain - adj_matrix[prev.node][change[0]] > 0) {
+                        if(change_is_hamiltonian()) {
+                            return true;
+                        }
+                    }
+                }
+
+                // otherwise, find a link not in the current tour
+                ld max_gain = -1;
+                int max_node = -1;
+
+                for (int node = 0; node < n; node++)
+                {
+                    if (adjacencies[0] == node || adjacencies[1] == node)
+                        continue;
+
+                    bool already_added = false;
+                    for (int i = 0; i < change.size(); i++)
+                    {
+                        if (change[i] == node)
+                            already_added = true;
+                    }
+                    if (already_added)
+                        continue;
+
+                    if (prev.index >= BRANCH_ONE_ABOVE)
+                    {
+                        if (prev.gain - adj_matrix[prev.node][node] > max_gain)
+                        {
+                            max_gain = prev.gain - adj_matrix[prev.node][node];
+                            max_node = node;
+                        }
+                    }
+                    else
+                    {
+                        if (prev.gain - adj_matrix[prev.node][node] > 0)
+                        {
+                            // add if gain > 0
+                            LKH_stack.push(LKH_step(node, prev.index + 1, prev.gain - adj_matrix[prev.node][node]));
+                        }
+                    }
+                }
+
+                if (prev.index >= BRANCH_ONE_ABOVE && max_gain > 0)
+                {
+                    LKH_stack.push(LKH_step(max_node, prev.index + 1, max_gain));
                 }
             }
         }
+
+        return false;
+    }
+
+    bool are_tour_adjacent(int node1, int node2) {
+        int index1 = tour_inv[node1]; int index2 = tour_inv[node2];
+        if(abs( index1 - index2 ) <= 1 || abs(index1 - index2) == n-1) return true;
+        return false;
     }
 
     void update_tour_inv() {
