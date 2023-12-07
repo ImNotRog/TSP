@@ -1,7 +1,4 @@
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include <algorithm>
+#include <bits/stdc++.h>
 
 using namespace std;
 typedef long double ld;
@@ -34,7 +31,7 @@ ld eucl_dist (pld x, pld y)
 {
     return sqrtl(sq(x.first - y.first) + sq(x.second - y.second));
 }
-
+    
 struct Graph
 {
     int n;
@@ -127,11 +124,109 @@ struct Tour : Graph
 
 };
 
+struct Edge
+{
+    int st;
+    int en;
+    ld weight;
+    Edge(int tmp_st, int tmp_en, ld tmp_weight)
+    {
+        st = tmp_st;
+        en = tmp_en;
+        weight = tmp_weight;
+    }
+};
+struct DSU {
+    vector<int> e;
+    DSU (){}
+    DSU (int N) { e = vector<int>(N, -1) ;}
+    
+    int get(int x) { return e[x] < 0 ? x : e[x] = get(e[x]); }
+    
+    bool same_set(int a, int b) { return get(a) == get(b); }
+    int size(int x) { return -e[get(x)]; }
+    
+    bool unite (int x, int y){
+    x = get(x), y = get(y);
+        if (x == y) return false;
+        if (e[x] > e[y]) swap(x,y);
+        e[x] += e[y]; e[y] = x;
+        return true;
+    }
+    
+};
+
+struct TwoApprox : Tour
+{
+    DSU dsu;
+    vector<vector<int>> adj_list;
+    vector<Edge> e;
+    vector<int> pv;
+    int prev_val;
+    void dfs (int u, int p)
+    {
+        pv[u] = prev_val;
+        prev_val = u;
+        for (auto x : adj_list[u])
+        {
+            if (x != p)
+            {
+                dfs(x,u);
+            }
+        }
+    }
+    
+    void reconstruct_path()
+    {
+        int current_vertex = prev_val;
+        
+        while (current_vertex >= 0)
+        {
+            path.push_back(current_vertex);
+            current_vertex = pv[current_vertex];
+        }
+        path.push_back(prev_val);
+    }
+    
+    TwoApprox (vector<pld> cities, function<ld(pld, pld)> temp_dist) : Tour(cities, temp_dist)
+    {
+        dsu = DSU(n);
+        pv = vector<int> (n);
+        adj_list = vector<vector<int>> (n);
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = i + 1; j < n; j++)
+            {
+                e.push_back(Edge(i, j, adj_matrix[i][j]));
+            }
+        }
+        
+        sort(e.begin(),e.end(), [&](Edge &x, Edge &y)
+        {
+            return x.weight < y.weight;
+        });
+        
+        for (auto [x,y,w] : e)
+        {
+            if (dsu.unite(x,y))
+            {
+                adj_list[x].push_back(y);
+                adj_list[y].push_back(x);
+            }
+        }
+        
+        prev_val = -1;
+        dfs(0, -1);
+        reconstruct_path();
+    }
+    
+    
+};
 int main()
 {
     init();
-    Tour g(COORDINATE_LIST, eucl_dist);
-    cout << g.size() << "\n";
+    TwoApprox g(COORDINATE_LIST, eucl_dist);
+    g.print_path();
  return 0;
 }
 
