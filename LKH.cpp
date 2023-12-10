@@ -18,8 +18,8 @@ vector<string> CITY_ORDER;
 const ld INF = 1e18;
 
 const int BRANCH_BOTH_BELOW = 2;
-const int CONSIDER_ALL_BELOW = 1;
-const int BRANCH_ONE_ABOVE = 5;
+const int CONSIDER_ALL_BELOW = 7;
+const int BRANCH_ONE_ABOVE = 7;
 const int NUM_CLOSEST_NEIGHBORS = 10;
 
 void init()
@@ -179,13 +179,14 @@ struct LKH : Tour {
             if(!found) break;
 
             update_tour_with_change();
-            print_tour();
-            print_explicit_tour();
+
+            // print_explicit_tour();
             iterations ++;
             cout << "ITERATION: " << iterations << endl;
+            print_tour();
         }
 
-        print_tour();
+        // print_tour();
         print_explicit_tour();
     }
 
@@ -210,7 +211,7 @@ struct LKH : Tour {
         for (int node : tour) {
             cout << "(" << city_coords[node].first << "," << city_coords[node].second << "), ";
         }
-        cout << "(" << city_coords[0].first << "," << city_coords[0].second << ")" << endl;
+        cout << "(" << city_coords[tour[0]].first << "," << city_coords[tour[0]].second << ")" << endl;
     }
 
     bool find_positive_change () {
@@ -221,7 +222,7 @@ struct LKH : Tour {
         stack<LKH_step> LKH_stack;
 
         for (int i = 0; i < n; i++)
-            LKH_stack.push(LKH_step(i, 0, 0));
+            LKH_stack.push(LKH_step(tour[i], 0, 0));
 
         int num_steps = 0;
 
@@ -301,8 +302,8 @@ struct LKH : Tour {
                     if(prev.gain - adj_matrix[prev.node][change[0]] > 0) {
                         if(change_is_hamiltonian()) {
                             
-                            cout << num_steps << endl;
-                            cout << change.size() << endl;
+                            // cout << num_steps << endl;
+                            // cout << change.size() << endl;
 
                             return true;
                         }
@@ -388,7 +389,6 @@ struct LKH : Tour {
 
         vector<int> new_tour = vector<int>(n);
 
-
         int m = change.size();
 
         vector<pii> links;        // given by index in tour
@@ -399,7 +399,8 @@ struct LKH : Tour {
             change_nodes.push_back(tour_inv[change[i]]);
         }
 
-        int current_node = 0;
+        int current_node = change_nodes[0];
+
         int direction = 1;
 
         for(int t = 0; t < n; t++)
@@ -442,7 +443,7 @@ struct LKH : Tour {
             }
 
             // traverse tour
-            current_node += direction;
+            current_node = (current_node + n + direction) % n;
         }
 
         tour = new_tour;
