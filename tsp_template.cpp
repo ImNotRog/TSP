@@ -2,6 +2,7 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 using namespace std;
 typedef long double ld;
@@ -10,7 +11,6 @@ typedef pair<ld, ld> pld;
 vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
 vector<string> CITY_ORDER;
 const ld INF = 1e18;
-
 
 void init()
 {
