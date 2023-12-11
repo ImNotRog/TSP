@@ -1,27 +1,13 @@
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include <algorithm>
-#include <stack>
-#include <array>
-#include <fstream>
-#include <cstdlib>
-#include <cmath>
-#include <functional>
-#include <cassert>
-#include "distance_functions.h"
+#include "utils.h"
 
-using namespace std;
-typedef long double ld;
-typedef pair<ld, ld> pld;
-
-vector<pld> COORDINATE_LIST = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
+vector<pld> COORDINATE_LIST;
 vector<string> CITY_ORDER;
-const ld INF = 1e18;
 
-void init()
+
+
+void init(string file_name)
 {
-    ifstream fin("city_list.txt");
+    ifstream fin(file_name);
     COORDINATE_LIST.clear();
     string city, state;
     ld x, y;
@@ -31,6 +17,7 @@ void init()
         CITY_ORDER.push_back(city);
     }
 }
+
 struct Graph
 {
     int n;
@@ -123,12 +110,34 @@ struct Tour : Graph
 
 };
 
-int main()
+struct Edge
 {
-    init();
-    Tour g(COORDINATE_LIST, earth_dist);
-    cout << g.size() << "\n";
- return 0;
-}
-
-
+    int st;
+    int en;
+    ld weight;
+    Edge(int tmp_st, int tmp_en, ld tmp_weight)
+    {
+        st = tmp_st;
+        en = tmp_en;
+        weight = tmp_weight;
+    }
+};
+struct DSU {
+    vector<int> e;
+    DSU (){}
+    DSU (int N) { e = vector<int>(N, -1) ;}
+    
+    int get(int x) { return e[x] < 0 ? x : e[x] = get(e[x]); }
+    
+    bool same_set(int a, int b) { return get(a) == get(b); }
+    int size(int x) { return -e[get(x)]; }
+    
+    bool unite (int x, int y){
+    x = get(x), y = get(y);
+        if (x == y) return false;
+        if (e[x] > e[y]) swap(x,y);
+        e[x] += e[y]; e[y] = x;
+        return true;
+    }
+    
+};
