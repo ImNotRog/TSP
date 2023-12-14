@@ -139,11 +139,11 @@ struct Christofide : Tour
             decomp[compress[i]] = i;
         }
         
-        for (auto x : odds)
-        {
-            cout << decomp[x] << " ";
-        }
-        cout << "\n";
+        //~ for (auto x : odds)
+        //~ {
+            //~ cout << decomp[x] << " ";
+        //~ }
+        //~ cout << "\n";
         
         ofstream fout("blossom5/send.txt");
         fout << odds.size() << " " << possible.size() << "\n";

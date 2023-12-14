@@ -148,8 +148,14 @@ int main() {
         {1, 0},
     };
     init("city_list.txt");
-    Annealing a = Annealing(COORDINATE_LIST, earth_dist);
-    a.print_path();
-    a.print_explicit_tour();
+    vector<Tour> tours;
+    for (int i = 0; i < 10; i++)
+    {
+        cout << i << "\n";
+        tours.push_back(Annealing(COORDINATE_LIST, earth_dist));
+    }
+    sort(tours.begin(),tours.end());
+    tours[0].print_path();
+    //~ a.print_explicit_tour();
     return 0;
 }
