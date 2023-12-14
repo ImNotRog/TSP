@@ -147,14 +147,14 @@ int main() {
         {-1, -1},
         {1, 0},
     };
-    init("city_list.txt");
+    init("small_city_list.txt");
     vector<Tour> tours;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 50; i++)
     {
         cout << i << "\n";
         tours.push_back(Annealing(COORDINATE_LIST, earth_dist));
     }
-    sort(tours.begin(),tours.end());
+    sort(tours.begin(),tours.end(),[](Tour a, Tour b) -> bool { return a.path_length < b.path_length; });
     tours[0].print_path();
     //~ a.print_explicit_tour();
     return 0;

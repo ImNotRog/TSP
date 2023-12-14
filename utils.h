@@ -19,14 +19,18 @@ typedef pair<ld, ld> pld;
 typedef pair<int,int> pii;
 const ld INF = 1e18;
 
+int RGEN_IT = 0;
+
 struct rgen
 {
     uniform_real_distribution<double> dist;
     default_random_engine re;
+
     rgen()
     {
         uniform_real_distribution<double> dist(0, 1);
-        re.seed(time(NULL));
+        re.seed(time(NULL) + RGEN_IT);
+        RGEN_IT ++;
     }
 
     double rand()
