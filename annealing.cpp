@@ -13,18 +13,15 @@ struct Annealing : Tour {
             path.push_back(i);
         } // initialize path
 
-        for(int i = 0; i < 1000; i++) {
+        for(int i = 0; i < 100*1000; i++) {
             
-            int a = rand_node();
-            int b = rand_node();
-
-            for(int j = 0; j < 500; j++) {
+            // for(int j = 0; j < 500; j++) {
                 reverse();
                 swap();
                 joint_swap_all();
-            }
+            // }
 
-            calc_path_length();
+            // calc_path_length();
             // cout << path_length << endl;
 
             TEMPERATURE *= TEMP_STEP;
